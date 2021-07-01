@@ -20,9 +20,13 @@ library(gt)            # for creating nice tables
 theme_set(theme_minimal())
 library(readxl)
 library(ggbump)
+library(patchwork)
+library(rvest)    
+library(robotstxt)
 
 ```
 
+***insert Armenian flag photo***
 
 I have lived in Armenia for the past two years (2018-2020) before coming back here to Palestine, there, I have finished my IB diploma and lived in an international school at times, and finished the two years living with locals. When I first came to Armenia, I did not feel it was very different from my home in Palestine, they were both countries with poor populations, however, there was a noticeable difference in the economic and social situation in Armenia after those two years have passed, and I want to investigate.
 
@@ -42,11 +46,155 @@ hapiness_index %>%
   geom_point() +
   geom_line()
 
+#Add labs
+
 ```
 
-We can see that during the past few years starting from 2017, there has been a sharp increase in the happiness index in the country compared with the prior years. This increase of nearly 1 point in hapiness scale took Armenia from being the 128th happiest country to the 86th happiest country in the world in an extraordinarly short time(“World Happiness Index - Knoema.Com”).
+We can see that during the past few years starting from 2017, there has been a sharp increase in the happiness index in the country compared with the prior years. This increase of nearly 1 point in happiness scale took Armenia from being the 128th happiest country to the 86th happiest country in the world in an extraordinarly short time(“World Happiness Index - Knoema.Com”).
 
 These conflicting messages suggest that while Armenians might be the angriest people on the planet -however extraordinary generous- they are making rapid progress in terns if happiness.
 
-I will try to explore the reasons for this increase in happiness and overall well-being of the country that I have witnessed in such a short time and that the data suggests.
+I will try to explore the reasons for this increase in happiness and overall well-being of the country that I have witnessed in such a short time and that the data suggests. I will use the word "satisfaction" to indicate the results from the happiness scale and will start analyzing with 2 Hypothesis: Increased satisfaction due to economic growth, increased satisfaction after the 2018 revolution.
+
+
+
+```{r}
+# import using importWizard
+armenia_worldbank_2 <- read_excel("Armenian_Data/armenia_worldbank_2.xlsx", 
+    col_types = c("text", "skip", "text", 
+        "skip", "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric"), skip = 4) %>% 
+  select(-starts_with("19"))
+
+```
+
+To explore economic growth I will start by looking at GDP (constant 2010 US$):
+
+```{r}
+gdp1 <- armenia_worldbank_2 %>% 
+  filter(`Indicator Name`== "GDP per capita (constant 2010 US$)") %>% 
+  pivot_longer(cols = starts_with("2"),
+               names_to = "year",
+               values_to = "GDP") %>% 
+  ggplot(aes(x = year,
+             y = GDP,
+             group = 1)) +
+  geom_line()
+```
+
+```{r}
+gdp2<- armenia_worldbank_2 %>% 
+  filter(`Indicator Name` == "GDP growth (annual %)") %>% 
+    pivot_longer(cols = starts_with("2"),
+               names_to = "year",
+               values_to = "GDP_growth") %>% 
+  ggplot(aes(x = year,
+             y = GDP_growth,
+             group = 1)) +
+  geom_col()
+``` 
+
+```{r}
+gdp1 / gdp2
+```
+
+We see that GDP has been sharply increasing for Armenia until 2009 when it suffered a strong decrease in GDP, however was able to recover and have a high 7.5% increase in GDP in 2018
+
+One element that is greatly contributing to the economy of Armenia is tourism due to its remarkable nature and the fact that most Armenians speak Russian, making it a popular destination for poeple from Caucasis and Russian-speaking nations.
+
+***Insert photo of Nature***
+
+```{r}
+#Source: https://knoema.com/atlas/Armenia/Number-of-arrivals
+
+number_of_arrivals <- read_excel("Armenian_Data/number of arrivals.xlsx")
+```
+
+```{r}
+arrivals <- number_of_arrivals %>% 
+  ggplot(aes(x = DATE,
+             y = VALUE)) +
+  geom_line()+
+  geom_point()
+
+arrivals
+```
+
+
+Using the number of arriving tourists as a rouge indicator, we can see that the number of arriving tourists has tripled from 558,000 in 2009 to 1,894,000 in 2019.
+
+```{r}
+paths_allowed(paths ="https://www.worlddata.info/asia/armenia/tourism.php")
+```
+```{r}
+tourist_rev_url <- read_html("https://www.worlddata.info/asia/armenia/tourism.php")
+```
+
+
+```{r}
+tourist_year <- 
+  tourist_rev_url %>%
+  html_nodes(".left") %>%
+  html_text()
+head(tourist_revenue)
+```
+
+```{r}
+tourist_rev <- 
+  tourist_rev_url %>%
+  html_nodes(".left+ td") %>%
+  html_text()
+
+```
+
+```{r}
+tourist_info <- tibble(year=tourist_year, revenue=tourist_rev) %>% 
+  mutate(revenue =  gsub(x = revenue,' m', 'e6', num))  #changing m into million
+head(tourist_info)
+```
+
+```{r}
+tourist_info %>% 
+  ggplot(aes(x = year, y = revenue)) +
+  geom_line()
+```
+
+
+```{r}
+
+armenian_populations <- read_csv("Armenian_Data/armenian_pop/world_populations.csv", 
+    col_types = cols(`Country Code` = col_skip(), 
+        `Indicator Name` = col_skip(), `Indicator Code` = col_skip()), 
+    skip = 4) %>% 
+  filter(`Country Name`== "Armenia") %>% 
+  pivot_longer(cols = -`Country Name`, names_to = "year", values_to = "population")
+
+```
+
+
+
+
+
+
+
+
 
