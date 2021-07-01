@@ -1,0 +1,52 @@
+---
+title: "final"
+author: "Laith Alayassa"
+date: "6/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+```
+
+```{r libraries}
+library(tidyverse)     # for data cleaning and plotting
+library(lubridate)     # for date manipulation
+library(ggthemes)      # for more themes (including theme_map())
+library(plotly)        # for the ggplotly() - basic interactivity
+library(gganimate)     # for adding animation layers to ggplots
+library(readr)
+library(gt)            # for creating nice tables
+theme_set(theme_minimal())
+library(readxl)
+library(ggbump)
+
+```
+
+
+I have lived in Armenia for the past two years (2018-2020) before coming back here to Palestine, there, I have finished my IB diploma and lived in an international school at times, and finished the two years living with locals. When I first came to Armenia, I did not feel it was very different from my home in Palestine, they were both countries with poor populations, however, there was a noticeable difference in the economic and social situation in Armenia after those two years have passed, and I want to investigate.
+
+In 2019, Armenians around me were laughing at the fact that their country was marked as the angriest in the world in a Gallup survey with %45 of their population expressing feeling a lot of anger in the previous day (McCarthy). This got me thinking about the well-being and the happiness of the population since I imagine that a psychologically distressed population would have a hard time developing its economy.
+
+```{r}
+#Source: (“World Happiness Index - Knoema.Com”)
+hapiness_index <- read_excel("Armenian_Data/hapiness_index.xlsx") %>% 
+  pivot_longer( cols = starts_with("20"), names_to = "year") 
+```
+
+```{r}
+hapiness_index %>% 
+  ggplot(aes(x = year,
+             y = value,
+             group = 1)) +
+  geom_point() +
+  geom_line()
+
+```
+
+We can see that during the past few years starting from 2017, there has been a sharp increase in the happiness index in the country compared with the prior years. This increase of nearly 1 point in hapiness scale took Armenia from being the 128th happiest country to the 86th happiest country in the world in an extraordinarly short time(“World Happiness Index - Knoema.Com”).
+
+These conflicting messages suggest that while Armenians might be the angriest people on the planet -however extraordinary generous- they are making rapid progress in terns if happiness.
+
+I will try to explore the reasons for this increase in happiness and overall well-being of the country that I have witnessed in such a short time and that the data suggests.
+
