@@ -24,6 +24,7 @@ library(patchwork)
 library(rvest)    
 library(robotstxt)
 
+
 ```
 
 ***insert Armenian flag photo***
@@ -82,8 +83,7 @@ armenia_worldbank_2 <- read_excel("Armenian_Data/armenia_worldbank_2.xlsx",
         "numeric", "numeric", "numeric", 
         "numeric", "numeric", "numeric", 
         "numeric", "numeric", "numeric", 
-        "numeric"), skip = 4) %>% 
-  select(-starts_with("19"))
+        "numeric"), skip = 4)
 
 ```
 
@@ -91,6 +91,7 @@ To explore economic growth I will start by looking at GDP (constant 2010 US$):
 
 ```{r}
 gdp1 <- armenia_worldbank_2 %>% 
+  select(-starts_with("19")) %>% 
   filter(`Indicator Name`== "GDP per capita (constant 2010 US$)") %>% 
   pivot_longer(cols = starts_with("2"),
                names_to = "year",
@@ -174,9 +175,16 @@ tourist_info <- tibble(year=tourist_year, income_per_tourist =tourist_income_per
 ```
 
 ```{r}
-number_of_arrivals %>% 
+tourist_spending <- number_of_arrivals %>% 
   left_join(tourist_info) %>% 
-  mutate(total_revenue = as.numeric (income_per_tourist) * VALUE) %>% 
+  mutate(total_revenue = as.numeric (income_per_tourist) * VALUE)
+```
+
+
+
+
+```{r}
+tourist_spending  %>% 
   ggplot(aes(x = year,
              y = total_revenue,
              group = 1)) +
@@ -187,6 +195,21 @@ number_of_arrivals %>%
 
 
 
+```{r}
+armenia_worldbank_2 %>%
+  select(`Indicator Name`, starts_with("1"), starts_with("2")) %>% 
+  filter(`Indicator Name` == "Intentional homicides (per 100,000 people)") %>% 
+  pivot_longer(cols = -`Indicator Name`,
+               names_to = "year",
+               values_to = "homicide_rate") %>%
+  filter(homicide_rate > 1) %>% 
+  ggplot(aes(x = year,
+             y = homicide_rate,
+             group = 1)) +
+  geom_bump(size = 2, smooth = 5)
+
+#Kids who were born in early 2000 and are now young adults has experienced much less of this
+```
 
 
 
