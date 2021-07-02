@@ -126,7 +126,8 @@ One element that is greatly contributing to the economy of Armenia is tourism du
 ```{r}
 #Source: https://knoema.com/atlas/Armenia/Number-of-arrivals
 
-number_of_arrivals <- read_excel("Armenian_Data/number of arrivals.xlsx")
+number_of_arrivals <- read_excel("Armenian_Data/number of arrivals.xlsx") %>% 
+  mutate(year = as.character (DATE))
 ```
 
 ```{r}
@@ -134,13 +135,16 @@ arrivals <- number_of_arrivals %>%
   ggplot(aes(x = DATE,
              y = VALUE)) +
   geom_line()+
-  geom_point()
+  geom_point() +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  labs(x = "")
 
 arrivals
 ```
 
 
-Using the number of arriving tourists as a rouge indicator, we can see that the number of arriving tourists has tripled from 558,000 in 2009 to 1,894,000 in 2019.
+Using the number of arriving tourists as a rough  indicator, we can see that the number of arriving tourists has tripled from 558,000 in 2009 to 1,894,000 in 2019.
 
 ```{r}
 paths_allowed(paths ="https://www.worlddata.info/asia/armenia/tourism.php")
@@ -155,28 +159,58 @@ tourist_year <-
   tourist_rev_url %>%
   html_nodes(".left") %>%
   html_text()
-head(tourist_revenue)
-```
 
-```{r}
-tourist_rev <- 
+tourist_income_per_tourist <- 
   tourist_rev_url %>%
-  html_nodes(".left+ td") %>%
+  html_nodes("td:nth-child(5)") %>%
   html_text()
+```
 
+
+```{r}
+tourist_info <- tibble(year=tourist_year, income_per_tourist =tourist_income_per_tourist) %>% 
+  mutate( income_per_tourist= gsub(x = income_per_tourist,'\\$', '', num),
+          income_per_tourist = gsub(x = income_per_tourist,'\\,', '', num))
 ```
 
 ```{r}
-tourist_info <- tibble(year=tourist_year, revenue=tourist_rev) %>% 
-  mutate(revenue =  gsub(x = revenue,' m', 'e6', num))  #changing m into million
-head(tourist_info)
+number_of_arrivals %>% 
+  left_join(tourist_info) %>% 
+  mutate(total_revenue = as.numeric (income_per_tourist) * VALUE) %>% 
+  ggplot(aes(x = year,
+             y = total_revenue,
+             group = 1)) +
+  geom_line() +
+  geom_point()
 ```
 
-```{r}
-tourist_info %>% 
-  ggplot(aes(x = year, y = revenue)) +
-  geom_line()
-```
+
+
+
+
+
+
+
+
+
+
+<!-- ```{r} -->
+<!-- tourist_revenue <- tourist_info %>%  -->
+<!--   filter(year > 2000) %>%  -->
+<!--   ggplot(aes(x = year , y = revenue4)) + -->
+<!--   geom_col() -->
+
+<!-- arrivals/tourist_revenue_graph -->
+<!-- ``` -->
+
+
+
+
+
+
+
+
+
 
 
 ```{r}
