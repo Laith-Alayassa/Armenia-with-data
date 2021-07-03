@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = FALSE, error=TRUE, message=FALSE, warning=FALSE)
 ```
 
 ```{r libraries}
@@ -23,7 +23,8 @@ library(ggbump)
 library(patchwork)
 library(rvest)    
 library(robotstxt)
-
+library(see)
+theme_set(theme_minimal())
 
 ```
 
@@ -45,8 +46,10 @@ hapiness_index %>%
              y = value,
              group = 1)) +
   geom_point() +
-  geom_line()
-
+  geom_line(color = "yellow2") +
+  labs(
+    y = "Happiness score"
+  )
 #Add labs
 
 ```
@@ -114,7 +117,7 @@ gdp2<- armenia_worldbank_2 %>%
   geom_col()
 ``` 
 
-```{r}
+```{r fig.height= 10}
 gdp1 / gdp2
 ```
 
@@ -133,19 +136,22 @@ number_of_arrivals <- read_excel("Armenian_Data/number of arrivals.xlsx") %>%
 
 ```{r}
 arrivals <- number_of_arrivals %>% 
+  filter(DATE == "2019" | DATE == "2008") %>% 
   ggplot(aes(x = DATE,
-             y = VALUE)) +
-  geom_line()+
-  geom_point() +
+             y = VALUE,
+             group = 1)) +
+  geom_col() +
+  # geom_line()+
+  # geom_point() +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank()) +
-  labs(x = "")
+  labs(y = "Number of tourists") 
 
 arrivals
 ```
 
 
-Using the number of arriving tourists as a rough  indicator, we can see that the number of arriving tourists has tripled from 558,000 in 2009 to 1,894,000 in 2019.
+Using the number of arriving tourists as a rough  indicator, we can see that the number of arriving tourists has tripled from around 500,000 in 2009 to 1,900,000 in 2019.
 
 ```{r}
 paths_allowed(paths ="https://www.worlddata.info/asia/armenia/tourism.php")
@@ -177,23 +183,42 @@ tourist_info <- tibble(year=tourist_year, income_per_tourist =tourist_income_per
 ```{r}
 tourist_spending <- number_of_arrivals %>% 
   left_join(tourist_info) %>% 
-  mutate(total_revenue = as.numeric (income_per_tourist) * VALUE)
+  mutate(total_revenue = as.numeric (income_per_tourist) * VALUE,
+         `Revenue in Billion` = total_revenue/1000000000)
 ```
 
 
+This increase in number of tourists lead to a huge increase in revenues in the tourism sphere in the past years and generated a great number of business opportunities. Armenia is now generating over 1.5 Billion US dollars in revenue compared to a 560 million dollars generated in 2008. 
+
+```{r}
+tourist_spending_plot <- tourist_spending  %>% 
+  ggplot(aes(x = year,
+             y = `Revenue in Billion`,
+             group = 1)) +
+  geom_line() +
+  geom_point() +
+  labs(y = "Tourism revenue in Billion Dollars")
+
+ggplotly(tourist_spending_plot)
+```
 
 
 ```{r}
-tourist_spending  %>% 
+armenia_worldbank_2 %>% 
+    select(-starts_with("19")) %>% 
+  filter(`Indicator Name`== "Poverty headcount ratio at $3.20 a day (2011 PPP) (% of population)") %>% 
+  pivot_longer(cols = starts_with("2"),
+               names_to = "year",
+               values_to = "poverty") %>% 
   ggplot(aes(x = year,
-             y = total_revenue,
-             group = 1)) +
-  geom_line() +
-  geom_point()
+             y = poverty,
+               group = 1)) +
+  geom_bump()
 ```
 
 
 
+Aside from economic flourishing wish could be contributing to the increase in satisfaction of the citizens, Armenia has been a more domestically peaceful country with intentinoal homicide rates dropping after early 1990's. This is significant to our satisfaction analysis because a kids born in the year 2000 is now 21, and has lived a childhood in a relatively safer enviornemnt, and is now contributing to the studies that measure hapiness, and moreover, the parents of these children might be also more satisfied that their children had a relatively peacful childhood.
 
 ```{r}
 armenia_worldbank_2 %>%
