@@ -46,11 +46,12 @@ hapiness_index %>%
              y = value,
              group = 1)) +
   geom_point() +
-  geom_line(color = "yellow2") +
+  geom_line() +
   labs(
     y = "Happiness score"
   )
 #Add labs
+
 
 ```
 
@@ -190,7 +191,7 @@ tourist_spending <- number_of_arrivals %>%
 
 This increase in number of tourists lead to a huge increase in revenues in the tourism sphere in the past years and generated a great number of business opportunities. Armenia is now generating over 1.5 Billion US dollars in revenue compared to a 560 million dollars generated in 2008. 
 
-```{r}
+```{r, dpi= 150}
 tourist_spending_plot <- tourist_spending  %>% 
   ggplot(aes(x = year,
              y = `Revenue in Billion`,
@@ -204,7 +205,7 @@ ggplotly(tourist_spending_plot)
 
 
 ```{r}
-armenia_worldbank_2 %>% 
+poverty_headcount <- armenia_worldbank_2 %>% 
     select(-starts_with("19")) %>% 
   filter(`Indicator Name`== "Poverty headcount ratio at $3.20 a day (2011 PPP) (% of population)") %>% 
   pivot_longer(cols = starts_with("2"),
@@ -214,6 +215,9 @@ armenia_worldbank_2 %>%
              y = poverty,
                group = 1)) +
   geom_bump()
+
+poverty_headcount
+
 ```
 
 
@@ -231,8 +235,9 @@ armenia_worldbank_2 %>%
   ggplot(aes(x = year,
              y = homicide_rate,
              group = 1)) +
-  geom_bump(size = 2, smooth = 5)
+  geom_bump(size = 1)
 
+# ggsave(filename = "attempt10.png", dpi = 600)
 #Kids who were born in early 2000 and are now young adults has experienced much less of this
 ```
 
