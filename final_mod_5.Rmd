@@ -1,5 +1,5 @@
 ---
-title: "final"
+title: "Data Science Final"
 author: "Laith Alayassa"
 date: "6/28/2021"
 output: 
@@ -117,15 +117,20 @@ gdp1 <- armenia_worldbank_2 %>%
                names_to = "year",
                values_to = "GDP") %>% 
   filter(year != 2020) %>% 
+  mutate(GDP = round(GDP,0)) %>% 
   ggplot(aes(x = year,
              y = GDP,
              group = 1)) +
-  geom_line(color = "#007797", size = 2) +
+  geom_line() +
   labs(title = "Armenia GDP per Capita",
        subtitle = "constant 2010 US$",
        x = "",
-       y = "USD"
-       )
+       y = "USD/capita"
+       ) +
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
 ```
 
 ```{r}
@@ -135,17 +140,28 @@ gdp2<- armenia_worldbank_2 %>%
                names_to = "year",
                values_to = "GDP_growth") %>% 
   filter( year != 2020) %>% 
+  mutate(`GDP growth` = GDP_growth) %>% 
   ggplot(aes(x = year,
-             y = GDP_growth,
+             y = `GDP growth`,
              group = 1)) +
-  geom_col(fill = "#007797") +
+  # geom_col(fill = "#343A40") +
+  geom_col(aes(fill = `GDP growth`)) +
   labs(title = " Annual GDP Growth",
        x = "",
-       y = "%")
+       y = "% change") +
+  scale_fill_gradient2(low = "red", mid = muted("blue"), high = "#007797", midpoint = -5) +
+  theme(legend.position = 'none')
+
+
 ``` 
 
-```{r fig.height= 7, fig.width=8}
-gdp1 / gdp2
+```{r}
+#  {r fig.height= 7, fig.width=8}
+# gdp1 / gdp2
+ggplotly(gdp1, tooltip = c("x", "y"))
+ggplotly(gdp2 , tooltip = c("x", "y"))
+
+# subplot(gdp1, gdp2, nrows = 2, titleY = TRUE, titleX = TRUE)
 ```
 
 We see that GDP has been increasing at a very high rate that is over 10% since the year 2000 until 2009 when it dropped by 14%, however Armenia was able to recover and achieve a increase in GDP afterwards that reached around 7.5% in 20189. This increase in GDP can explain a part of the long-term increased satisfaction in the country, and perhaps the cumulative effect of this increase has only recently started to greatly increase the standards of living for people increasing their happiness in the past few years.
@@ -164,7 +180,7 @@ poverty_headcount <- armenia_worldbank_2 %>%
   ggplot(aes(x = year,
              y = poverty,
                group = 1)) +
-  geom_bump(color = "#007797") +
+  geom_bump(color = "black") +
   scale_x_discrete(breaks = c(2001, 2003,2005,2007,2009,2011,2013,2015,2017, 2019)) +
   labs(title = "Poverty headcount rate (Defined as $3.20/day)",
        subtitle = "Defined as $3.20/day",
@@ -200,16 +216,28 @@ number_of_arrivals <- read_excel("Armenian_Data/number of arrivals.xlsx") %>%
 
 ```{r echo=FALSE, dpi= 150}
 arrivals <- number_of_arrivals %>% 
-  ggplot(aes(x = as.character.Date(DATE),
+  mutate(Date = as.character.Date(DATE))  %>% 
+  ggplot(aes(x = Date,
              y = VALUE/1000,
              group = 1)) +
-  geom_area(fill = "#007797") +
+   geom_ribbon(aes(ymax = VALUE/1000, ymin = 0 , group = VALUE/1000)) +
+  geom_col(aes(fill = VALUE)) +
+  theme(legend.position = 'none') +
+  scale_fill_gradient2(position="bottom" , low = "red", mid = ("red"), high = "#007797") 
+
+  # # geom_area(fill = "#007797") +
+  # geom_area(fill = "#343A40") +
+  # # geom_line(color = "#343A40") +
+  # # geom_col() +
   labs(title = "Number of tourist arrivals",
        y = "Number (thousands)",
-       x = "") +
-  transition_reveal(along = DATE)
+       x = "") 
+  # +
+  # transition_reveal(along = DATE)
 
-animate(arrivals, duration = 12 , fps = 15, end_pause = 20)
+  ggplotly(arrivals, tooltip = c("text","x", "number_of_arrivals$DATE" ,"y", "number_of_arrivals$VALUE"))
+  
+# animate(arrivals, duration = 12 , fps = 15, end_pause = 20)
 ```
 
 
@@ -379,4 +407,3 @@ These changes in right and liberties and press freedom after the revolution, in 
 
 
 # make first graph plotly
-
