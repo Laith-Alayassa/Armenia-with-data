@@ -1,0 +1,436 @@
+---
+title: "Data Science Final"
+author: "Laith Alayassa"
+date: "6/28/2021"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, error=TRUE, message=FALSE, warning=FALSE, fig.align = 'center')
+```
+
+```{r libraries}
+library(tidyverse)     # for data cleaning and plotting
+library(lubridate)     # for date manipulation
+library(ggthemes)      # for more themes (including theme_map())
+library(plotly)        # for the ggplotly() - basic interactivity
+library(gganimate)     # for adding animation layers to ggplots
+library(readr)
+library(gt)            # for creating nice tables
+library(readxl)
+library(ggbump)
+library(patchwork)
+library(rvest)    
+library(robotstxt)
+library(scales)
+library(see)
+theme_set(theme_minimal())
+
+```
+# Armenia
+
+![The Armenian Flag](arm_flag.png)
+
+
+
+I have lived in Armenia for the past two years (2018-2020) before coming back here to Palestine, there, I have finished my IB diploma and lived in an international school at times, and finished the two years living with locals. When I first came to Armenia, I did not feel it was very different from my home in Palestine, they were both countries with generally poor populations, however, there was a noticeable positive difference in the economic and social situation in Armenia after those two years have passed, and I want to investigate that change.
+
+## Hapiness and Anger
+
+In 2019, Armenians -and surprisingly to me- were labelled as the angriest in the world in a Gallup survey with %45 of their population expressing feeling a lot of anger in the previous day [(McCarthy)](https://www.statista.com/chart/17842/share-of-the-population-that-experienced-a-lot-of-anger-yesterday/). This got me thinking about the well-being and the happiness of the population since I imagine that a psychologically distressed population would have a hard time developing achieving that positive change I noticed. So I looked up the happiness score of Armenia and it seemed to be moving in a positive direction:
+
+```{r}
+#Source: (“World Happiness Index - Knoema.Com”)
+hapiness_index <- read_excel("Armenian_Data/hapiness_index.xlsx") %>% 
+  pivot_longer( cols = starts_with("20"), names_to = "year") 
+```
+
+
+```{r fig.env="marginfigure"}
+happiness_plot <- hapiness_index %>% 
+  mutate(score = round(value,2)) %>% 
+  ggplot(aes(x = year,
+             y = score,
+             group = 1)) +
+  geom_line() +
+  geom_point(aes(color = value), size = 2) +
+    labs(title= "Armenia's Hapiness Score",
+       y = "Score",
+       x = "") +
+   # scale_color_gradient(low = "#315e26", high = "#8DC317") +
+    scale_color_gradient2(low = "red", mid = '#007797' ,high = "#007797", midpoint = 4.78) +
+  theme(legend.position = "none")
+
+ggplotly(happiness_plot, tooltip = c("x", "y"))
+```
+
+We can see that during the past few years starting from 2017, there has been a sharp increase in the happiness index in the country compared with the prior years. This increase of nearly 1 point in happiness scale raised Armenia from being the 128th happiest to the 86th happiest country in the world in an extraordinary short time ([“World Happiness Index - Knoema.Com”](https://knoema.com//SDSNWHP2016/world-happiness-index)).
+
+These conflicting messages suggest that while Armenians might be the angriest people on the planet, they are making rapid progress in terms of happiness, and through my experience and information provided to me by Armenian friends that describe a betterment of their country that has been occurring throughout their lifetimes on multiple dimensions.
+
+The descriptions I was told were often vague and generalizations that did not pin point a certain set of factors, and they only described an overall increase in satisfaction and development in the country, therefore I decided to eliminate the vagueness by asking the question "What are the factors contributing to the increased satisfaction in Armenia?" Two possible hypothesis to mind: Increased satisfaction due to economic growth (long-term), and increased satisfaction after the 2018 revolution that resulted in overthrowing the older government and the establishment of a new one (short-term).
+
+
+
+
+```{r}
+# import using importWizard
+armenia_worldbank_2 <- read_excel("Armenian_Data/armenia_worldbank_2.xlsx", 
+    col_types = c("text", "skip", "text", 
+        "skip", "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric"), skip = 4)
+
+```
+
+# Economic growth?
+
+## GDP
+
+To explore economic growth I will start by looking at GDP (constant 2010 US$) using information provided by the [World Bank data repository](https://data.worldbank.org/country/armenia) which provides information about global development:
+
+```{r}
+gdp1 <- armenia_worldbank_2 %>% 
+  select(-starts_with("19")) %>% 
+  filter(`Indicator Name`== "GDP per capita (constant 2010 US$)") %>% 
+  pivot_longer(cols = starts_with("2"),
+               names_to = "year",
+               values_to = "GDP") %>% 
+  filter(year != 2020) %>% 
+  mutate(GDP = round(GDP,0)) %>% 
+  ggplot(aes(x = year,
+             y = GDP,
+             group = 1)) +
+  geom_line() +
+  scale_x_discrete(breaks = c(2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020)) +
+  labs(title = "Armenia GDP per Capita",
+       subtitle = "constant 2010 US$",
+       x = "",
+       y = "USD/capita"
+       ) 
+# +
+    # theme(axis.title.x=element_blank(),
+    #     axis.text.x=element_blank(),
+    #     axis.ticks.x=element_blank())
+
+```
+
+```{r}
+gdp2<- armenia_worldbank_2 %>% 
+  filter(`Indicator Name` == "GDP growth (annual %)") %>% 
+    pivot_longer(cols = starts_with("2"),
+               names_to = "year",
+               values_to = "GDP_growth") %>% 
+  filter( year != 2020) %>% 
+  mutate(`GDP growth` = GDP_growth) %>% 
+  ggplot(aes(x = year,
+             y = `GDP growth`,
+             group = 1)) +
+  # geom_col(fill = "#343A40") +
+  geom_col(aes(fill = `GDP growth`)) +
+  scale_x_discrete(breaks = c(2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020)) +
+  labs(title = " Annual GDP Growth",
+       x = "",
+       y = "% change") +
+  scale_fill_gradient2(low = "red", mid = muted("blue"), high = "#007797", midpoint = -5) +
+  theme(legend.position = 'none')
+
+
+``` 
+
+```{r}
+#  {r fig.height= 7, fig.width=8}
+# gdp1 / gdp2
+ggplotly(gdp1, tooltip = c("x", "y"))
+
+```
+
+The graph shows an obvious increaseing GDP since the year 2000, but to understand the rate of increase I examined the percentage change in GDP from one year to the other. This will reveal two important things about the economy. 1) What is the annual GDP growth rate? which is an important metric for the health of the economy and its developement, and (2) How is the economy doing from one yera to the next? which helps us evaluate the effect of certain events during those years on the economy (for example comparing GDP growth between 2019 and 2020 can help us understand the effect of the pandemic on the economy.):
+
+```{r}
+ggplotly(gdp2 , tooltip = c("x", "y")) 
+```
+
+
+<!-- # subplot(gdp1, gdp2, nrows = 2, titleY = TRUE, titleX = TRUE) -->
+
+
+We see that GDP has been increasing at a very high rate that is over 10% since the year 2000 until 2009 when it dropped by 14% which, according to [this report](https://www.adb.org/sites/default/files/linked-documents/cps-arm-2014-2018-ea.pdf) by the Asian Development Bank, was due to the 2008-2009 crises that "exposed the vulnerabilities of the Armenian economy, when foreign exchange inflows [...] declined sharply." However Armenia was able to recover and achieve a increase in GDP afterwards that reached around 7.5% in 2019. This increase in GDP can explain a part of the long-term increased satisfaction in the country, and perhaps the cumulative effect of this increase has only recently started to greatly increase the standards of living for people increasing their happiness in the past few years. And while high annual GDP growth rates are generally not desirable because they lead to inflation, they can be beneficial poor and recovering economies .
+
+### Poverty
+ 
+Furthermore, the poverty rate that defined as $3.20/day has been dropping since the beginning of this Millennium, going down from over 45% in 2001 to around 10% in 2019.
+
+```{r, dpi= 100}
+poverty_headcount <- armenia_worldbank_2 %>% 
+    select(-starts_with("19")) %>% 
+  filter(`Indicator Name`== "Poverty headcount ratio at $3.20 a day (2011 PPP) (% of population)") %>% 
+  pivot_longer(cols = starts_with("2"),
+               names_to = "year",
+               values_to = "poverty") %>% 
+  ggplot(aes(x = year,
+             y = poverty,
+               group = 1,
+             color = poverty)) +
+  geom_bump(color = "black") +
+  geom_point(size = 2) +
+  scale_x_discrete(breaks = c(2001, 2003,2005,2007,2009,2011,2013,2015,2017, 2019)) +
+  labs(title = "Poverty headcount rate (Defined as $3.20/day)",
+       subtitle = "Defined as $3.20/day",
+       x = "",
+       y = "% of the population") +
+  scale_color_gradient(high = "red", low = "#007797") +
+  theme(panel.grid.major.x = element_blank(),
+        legend.position = "none")
+
+ggplotly(poverty_headcount,tooltip = c("text","x", "y")) %>% 
+  style(hoverinfo = "none", traces = 1)
+
+```
+
+The GDP growth leading to 2009 was accompanied with decrease in poverty rate, and its decline in 2009 was also accompanied with increase in poverty while continuing to decrease afterwards. The increase in GDP (which indicates economic activity) and the decrease in poverty could be two of the factors leading to an increased satisfaction in the long-term.
+
+
+## Tourism and the Economy:
+
+
+![dilijan](dilijan.jpg)
+This is a photo of Dilijan, the city where I lived [(source)](https://www.itinari.com/dilijan-city-in-a-forest-lxxn).
+
+
+One element that is greatly contributing to the economy of Armenia is tourism due to its remarkable nature and the fact that most Armenians speak Russian, making it a popular destination for people from Caucasus and Russian-speaking nations.
+
+
+To find information about tourism in Armenia, I looked for data sets online, and found [this data set](https://knoema.com/atlas/Armenia/Number-of-arrivals) one Knoema. Using the number of arriving tourists from this data as a rough  indicator, we can see that the number of arriving tourists has tripled from around 500,000 in 2009 to 1,900,000 in 2019.
+
+```{r}
+#Source: https://knoema.com/atlas/Armenia/Number-of-arrivals
+
+number_of_arrivals <- read_excel("Armenian_Data/number of arrivals.xlsx") %>% 
+  mutate(year = as.character (DATE))
+```
+
+```{r}
+arrivals <- number_of_arrivals %>% 
+  mutate(Date = as.character.Date(DATE),
+         `Number (thousands)` = VALUE/1000)  %>%
+  ggplot(aes(x = Date,
+             y = `Number (thousands)`,
+             group = 1)) +
+   geom_ribbon(aes(ymax = VALUE/1000, ymin = 0 , group = VALUE/1000)) +
+  geom_col(aes(fill = VALUE)) +
+  theme(legend.position = 'none') +
+  scale_fill_gradient2(position="bottom" , low = "red", mid = ("red"), high = "#007797") +
+
+  # # geom_area(fill = "#007797") +
+  # geom_area(fill = "#343A40") +
+  # # geom_line(color = "#343A40") +
+  # # geom_col() +
+  labs(title = "Number of tourist arrivals",
+       y = "Number (thousands)",
+       x = "") 
+  # +
+  # transition_reveal(along = DATE)
+
+  ggplotly(arrivals, tooltip = c("text","x", "y"))
+  
+# animate(arrivals, duration = 12 , fps = 15, end_pause = 20)
+```
+
+
+```{r echo=FALSE}
+#paths_allowed(paths ="https://www.worlddata.info/asia/armenia/tourism.php")
+```
+
+```{r}
+tourist_rev_url <- read_html("https://www.worlddata.info/asia/armenia/tourism.php")
+```
+
+
+```{r}
+tourist_year <- 
+  tourist_rev_url %>%
+  html_nodes(".left") %>%
+  html_text()
+
+tourist_income_per_tourist <- 
+  tourist_rev_url %>%
+  html_nodes("td:nth-child(5)") %>%
+  html_text()
+```
+
+
+```{r}
+tourist_info <- tibble(year=tourist_year, income_per_tourist =tourist_income_per_tourist) %>% 
+  mutate( income_per_tourist= gsub(x = income_per_tourist,'\\$', '', num),
+          income_per_tourist = gsub(x = income_per_tourist,'\\,', '', num))
+```
+
+```{r}
+tourist_spending <- number_of_arrivals %>% 
+  left_join(tourist_info) %>% 
+  mutate(total_revenue = as.numeric (income_per_tourist) * VALUE,
+         `Revenue in Billion` = total_revenue/1000000000)
+```
+To understand the effect of the tourists quantitatively, I wanted to understand the revenue generated through tourism. [WorldData.info](https://www.worlddata.info/asia/armenia/tourism.php) provided information about the average revenue from each tourists. After scraping this data, I was able to find total revenue by multiplying the number of tourists by the revenue generated from each tourist.
+
+The following interactive plot showcases the revenue generated by trourism in Armenia:
+
+```{r}
+tourist_spending_plot <- tourist_spending  %>% 
+  mutate(`Revenue in Billion $` = round(`Revenue in Billion`,digits = 2)) %>% 
+  ggplot(aes(x = year,
+             y = `Revenue in Billion $`,
+             group = 1,
+             color = `Revenue in Billion $`)) +
+  geom_line(color = "black") +
+  geom_point(size = 2) +
+  scale_color_gradient2(low ="red", mid="#007797",  high = "#007797", midpoint = 1.04) +
+  labs(title = "Toursim revenue in US$",
+       y = "Revenue (Billions)",
+       x = "") +
+  theme(legend.position = 'none')
+
+ggplotly(tourist_spending_plot, tooltip = c("text", "x","y"))
+```
+
+
+This increase in number of tourists lead to a huge increase in revenues in the tourism sphere in the past years. Armenia is now generating over 1.5 Billion US dollars in revenue compared to a 560 million dollars generated in 2008.
+
+
+# Safety fix
+
+Aside from economic flourishing wish could be contributing to the increase in satisfaction of the citizens, Armenia has been a more domestically peaceful country with intentional homicide rates dropping after early 1990s. This is significant to our satisfaction analysis because a kids born in the year 2000 is now 21, and has lived a childhood in a relatively safer environment, and is now contributing to the studies that measure happiness, and moreover, the parents of these children might be also more satisfied that their children had a relatively peaceful childhood.
+
+```{r dpi= 100}
+homicide_plot <- armenia_worldbank_2 %>%
+  select(`Indicator Name`, starts_with("1"), starts_with("2")) %>% 
+  filter(`Indicator Name` == "Intentional homicides (per 100,000 people)") %>% 
+  pivot_longer(cols = -`Indicator Name`,
+               names_to = "year",
+               values_to = "homicide_rate") %>%
+  filter(homicide_rate > 1) %>% 
+  mutate(`homicide rate` = round(homicide_rate,2)) %>% 
+  ggplot(aes(x = year,
+             y = `homicide rate`,
+             group = 1,
+             color = `homicide rate`)) +
+  geom_bump(color = "black") +
+  geom_point(size = 2) +
+  scale_color_gradient(low = "#007797", high = "red") +
+  scale_x_discrete(breaks = c(1990,2000,2010,2018)) +
+  labs(title = "Intentional homicide per 100,000",
+       x = "",
+       y = "rate") +
+  theme(legend.position = "none")
+
+ggplotly(homicide_plot, tooltip = c("text", "x","y")) %>% 
+    style(hoverinfo = "none", traces = 1)
+#Kids who were born in early 2000 and are now young adults has experienced much less of this
+```
+
+
+
+
+# Political Situation
+
+The previous explored factors could explain the long-term effect on the Armenian society, however, to try and explain the recent increase in satisfaction starting form 2018, I would like to explore the political situation of Armenia and how it changed after the revolution.
+
+The [USAid](https://idea.usaid.gov/query) website provides thousands of indicators for countries around the world and allows users to freely download the data.
+
+
+```{r}
+usaid_data <- read_csv("Armenian_Data/usaid_data.csv", 
+    col_types = cols(series_id = col_skip(), 
+        source_name = col_skip(), country_id = col_skip(), 
+        country_name = col_skip(), region = col_skip(), 
+        income_group = col_skip())) %>% 
+  filter(series_name == "Freedom in the World: Aggregate score for Civil Liberties and Political Rights categories (0-100, higher is better)" |series_name == "Freedom in the World: Political Rights, Aggregate score (0-40, higher is better)" | series_name == "World Press Freedom Index rank" )
+```
+
+
+After the 2018 revolution, a number of changes occurred that might have affected the short-term satisfaction of the Armenian population. I wondered about the effects of the new government on the Armenian press, whether it would be more restricting or relaxed. The World Press Freedom Index shows us where each country rank in its freedom of press, the following is an interactive  graph for Armenia.
+
+
+```{r}
+press_plot <- usaid_data %>% 
+  filter(series_name == "World Press Freedom Index rank") %>%
+  mutate(rank = value) %>% 
+  ggplot(aes(x =  year,
+             y = rank,
+             color = value,
+             label = value)) +
+  geom_bump(color = "black") +
+  geom_point(size = 2) +
+  geom_vline(xintercept = 2018)  +
+  geom_text(aes(x = 2016, y = 103, label = "2018 Revolution"), color = "#007797", angle = 45 ) +
+  scale_x_continuous(breaks = c(2004,2006,2008,2010,2012,2014,2016,2018,2020)) +
+  scale_color_gradient(low = "#007797", high = "red") +
+  theme(legend.position = 'none') + 
+  labs(title = "Armenia world press freedom rank (lower is better)",
+       subtitle = "lower is better",
+       x = "",
+       y = "Global rank") 
+  
+
+ggplotly(press_plot, tooltip = c("text", "y", "usaid_data$value", "x", "usaid_data$year")) %>% 
+  style(hoverinfo = "none", traces = 1) %>% 
+  config(displayModeBar = FALSE)
+  
+```
+
+
+We see that directly after the revolution, Armenian went from being eightieth country with the most press freedom to the sixty-first in 2019. This increase in press freedom was accompanied by an increase in the Civil Liberties and Political Rights score (out of 100) directly after the revolution and has been increasing since then:
+
+
+```{r}
+civil_librities <- usaid_data %>% 
+  filter(series_name == "Freedom in the World: Aggregate score for Civil Liberties and Political Rights categories (0-100, higher is better)") %>%
+  mutate(score = value) %>% 
+  ggplot(aes(x =  year,
+             y = score,
+             color = value,
+             label = value)) +
+  geom_bump(color = "black") +
+  geom_point(size = 2) +
+  geom_vline(xintercept = 2018)  +
+  geom_text(aes(x = 2016, y = 52, label = "2018 Revolution"), color = "#007797", angle = 45 ) +
+  scale_x_continuous(breaks = c(2004,2006,2008,2010,2012,2014,2016,2018,2020)) +
+  scale_color_gradient(low = "red", high = "#007797") +
+  theme(legend.position = 'none') +
+  labs(title = "Civil liberties and political rights",
+       x = "",
+       y = "score (out of 100)")
+
+
+ggplotly(civil_librities, tooltip = c("text", "y", "usaid_data$value", "x", "usaid_data$year")) %>% 
+  style(hoverinfo = "none", traces = 1) %>% 
+  config(displayModeBar = FALSE)
+```
+
+
+
+These changes in right and liberties and press freedom after the revolution, in addition to the  ripple effect that they have on society could possibly explain the increase in happiness score in Armenia which only occurred recently.
