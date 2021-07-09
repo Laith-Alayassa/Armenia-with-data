@@ -221,7 +221,7 @@ ggplotly(poverty_headcount,tooltip = c("text","x", "y")) %>%
 
 We find that, indeed, the increase in GDP was accompanied by a decrease in poverty, since GDP growth leading to 2009 witnessed a similar but decreasing trend in the poverty rate, GDP’s decline in 2009 was accompanied by an increase in poverty, and the rising GDP in the years that followed had GDP increasing with poverty decreasing as well. The increase in GDP and the decrease in poverty could be two of the factors leading to increased satisfaction in the long term.
 
-## Tourism and the Economy:
+## Tourism and the Economy
 
 
 ![dilijan](dilijan.jpg)
