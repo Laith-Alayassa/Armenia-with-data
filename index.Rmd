@@ -39,6 +39,8 @@ theme_set(theme_minimal())
 
 
 I have lived in Armenia for the past two years (2018-2020) where I have finished my IB diploma at an international school. When I first came to Armenia, it felt similar to my home in Palestine since they were both countries with generally poor populations, however, by the time I had to leave, I felt that the economic situation in the country has improved through advancement I noticed in the city I lived in and in the capital, and through the talk of my Armenian friends. Although I felt the change, I had no objective evidence for its existence outside the city I lived in -or at all- so I decided to investigate it here.
+ 
+Please note that all graphs are interactive and hovering over data points shows precise values at that point.
 
 ## Happiness and Anger
 
