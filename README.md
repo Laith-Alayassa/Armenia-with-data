@@ -1,5 +1,6 @@
 # Armenia-with-data
-![armenia](https://user-images.githubusercontent.com/60319236/171983488-942c9423-2c2d-4667-9d5c-13bd120357a2.png)
+![armenia](https://user-images.githubusercontent.com/60319236/171987926-9424248a-ef9c-48e7-828f-d7f0cc836fcf.png)
+
 
 check it out [**here**](https://armenia-with-data.netlify.app/)
 
