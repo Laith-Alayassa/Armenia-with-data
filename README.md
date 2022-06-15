@@ -2,7 +2,9 @@
 ![armenia](https://user-images.githubusercontent.com/60319236/171987926-9424248a-ef9c-48e7-828f-d7f0cc836fcf.png)
 
 
-Visit the deployed website of this project [**here**](https://armenia-with-data.netlify.app/)
+
+<h2 align="center">Visit the deployed website here -> (https://armenia-with-data.netlify.app/)</h2>
+
 
 A project that explores recent changes to Armenia using data and R programming language.
 
